@@ -454,7 +454,7 @@ pub fn eval(expr: AST, context: &mut HashMap<String, AST>) -> Result<AST, String
         }
 
         AST::String(value) => {
-            return Ok(AST::String(value.replace("\"", "").replace("\\n", "\n").replace("\\t", "\t")));
+            return Ok(AST::String(escape_sequence_helper(value)));
         }
 
         AST::Addition { left, right, line: _ } => {
@@ -583,6 +583,88 @@ pub fn eval(expr: AST, context: &mut HashMap<String, AST>) -> Result<AST, String
     }
 
     Ok(AST::Null)
+}
+
+pub fn escape_sequence_helper(s: String) -> String {
+    let mut iter = s.chars().peekable();
+    let mut s2 = Vec::<char>::new();
+    while let Some(ch) = iter.next() {
+        match ch {
+            '\\' => {
+                let x = iter.next_if_eq(&'x');
+                if let Some(_) = x {
+                    let d1ornone = iter.next_if(|&c| c.is_ascii_hexdigit());
+                    if let Some(d1) = d1ornone {
+                        let d2ornone = iter.next_if(|&c| c.is_ascii_hexdigit());
+                        if let Some(d2) = d2ornone {
+                            let n1 = match d1.to_ascii_lowercase() {
+                                '0' => 0,
+                                '1' => 1,
+                                '2' => 2,
+                                '3' => 3,
+                                '4' => 4,
+                                '5' => 5,
+                                '6' => 6,
+                                '7' => 7,
+                                '8' => 8,
+                                '9' => 9,
+                                'a' => 10,
+                                'b' => 11,
+                                'c' => 12,
+                                'd' => 13,
+                                'e' => 14,
+                                'f' => 15,
+                                _ => 0,
+                            };
+                            let n2 = match d2.to_ascii_lowercase() {
+                                '0' => 0,
+                                '1' => 1,
+                                '2' => 2,
+                                '3' => 3,
+                                '4' => 4,
+                                '5' => 5,
+                                '6' => 6,
+                                '7' => 7,
+                                '8' => 8,
+                                '9' => 9,
+                                'a' => 10,
+                                'b' => 11,
+                                'c' => 12,
+                                'd' => 13,
+                                'e' => 14,
+                                'f' => 15,
+                                _ => 0,
+                            };
+                            s2.push(char::from_u32(((n1 * 16) + n2) as u32).unwrap_or('0'));
+                            continue;
+                        }
+                        s2.push('\\');
+                        s2.push('x');
+                        s2.push(d1);
+                        continue;
+                    }
+                    s2.push('\\');
+                    s2.push('x');
+                    continue;
+                }
+                s2.push('\\');
+            }
+            _ => s2.push(ch),
+        }
+    }
+    let s3 = s2.iter().collect::<String>()
+        .replace("\\0", "\0")
+        .replace("\\\"", "\"")
+        .replace("\\\'", "\'")
+        .replace("\\\\", "\\")
+        .replace("\\a", "\x07")
+        .replace("\\b", "\x08")
+        .replace("\\f", "\x0c")
+        .replace("\\n", "\n")
+        .replace("\\r", "\r")
+        .replace("\\t", "\t")
+        .replace("\\v", "\x0b");
+    s3
 }
 
 #[cfg(test)]
