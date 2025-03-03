@@ -3,6 +3,7 @@ use rand;
 
 use crate::ast::AST;
 use crate::eval::eval;
+use crate::packages::string::rep as str_rep;
 
 pub fn div(args: Vec<AST>, context: &mut HashMap<String, AST>) -> Result<(AST, AST), String> {
     match (eval(args[0].clone(), context), eval(args[1].clone(), context)) {
@@ -50,8 +51,8 @@ pub fn div(args: Vec<AST>, context: &mut HashMap<String, AST>) -> Result<(AST, A
     }
 }
 
-pub fn mul(args: Vec<AST>, _: &mut HashMap<String, AST>) -> Result<(AST, AST), String> {
-    match (eval(args[0].clone(), &mut HashMap::new()), eval(args[1].clone(), &mut HashMap::new())) {
+pub fn mul(args: Vec<AST>, context: &mut HashMap<String, AST>) -> Result<(AST, AST), String> {
+    match (eval(args[0].clone(), context), eval(args[1].clone(), context)) {
         (Ok(AST::Number(a)), Ok(AST::Number(b))) => {
             return Ok((AST::Number(a * b), AST::Null));
         }
@@ -66,6 +67,14 @@ pub fn mul(args: Vec<AST>, _: &mut HashMap<String, AST>) -> Result<(AST, AST), S
 
         (Ok(AST::Number(a)), Ok(AST::Float(b))) => {
             return Ok((AST::Float(a as f64 * b), AST::Null));
+        }
+
+        (Ok(AST::String(s)), Ok(AST::Number(n))) => {
+            return Ok(str_rep(vec![AST::String(s), AST::Number(n)], context)?);
+        }
+
+        (Ok(AST::Number(n)), Ok(AST::String(s))) => {
+            return Ok(str_rep(vec![AST::String(s), AST::Number(n)], context)?);
         }
 
         _ => {
