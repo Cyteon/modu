@@ -1,4 +1,5 @@
 #![feature(internal_output_capture)]
+#![feature(is_ascii_octdigit)]
 
 mod lexer;
 mod ast;
