@@ -76,7 +76,7 @@ pub enum Token {
     #[regex("[0-9]+\\.[0-9]+")]
     Float,
 
-    #[regex(r#""[^"]*"|'[^']*'"#)]
+    #[regex(r#""([^\\\n\r"]|\\.)*"|'([^\\\n\r']|\\.)*'"#)]
     String,
 
     #[regex("true|false")]

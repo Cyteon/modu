@@ -3,6 +3,7 @@ use crate::ast::AST;
 use std::{collections::HashMap, path::PathBuf};
 use crate::utils;
 use crate::packages::get_package;
+use crate::packages::string::get_object as str_get_obj;
 
 static DISABLED_ON_SERVER: [&str; 3] = ["file", "os", "ffi"];
 
@@ -283,6 +284,26 @@ pub fn eval(expr: AST, context: &mut HashMap<String, AST>) -> Result<AST, String
                                     }
                                 }
 
+                                AST::String(s) => {
+                                    match str_get_obj().get(property.as_ref().unwrap()) {
+                                        Some(AST::InternalFunction { name: _, args: f_args, call_fn }) => {
+                                            if args.len() == f_args.len() - 1 {
+                                                let mut new_args = vec![AST::String(s.clone())];
+
+                                                for arg in args {
+                                                    new_args.push(arg);
+                                                }
+
+                                                return Ok(call_fn(new_args, context)?.0);
+                                            }
+                                        },
+                                        
+                                        _ => {
+                                            return Err(format!("String has no method {}", property.as_ref().unwrap()))
+                                        }
+                                    }
+                                },
+
                                 _ => {
                                     return Err(format!("{} is not an object", name));
                                 }
@@ -454,7 +475,7 @@ pub fn eval(expr: AST, context: &mut HashMap<String, AST>) -> Result<AST, String
         }
 
         AST::String(value) => {
-            return Ok(AST::String(value.replace("\"", "").replace("\\n", "\n").replace("\\t", "\t")));
+            return Ok(AST::String(value));
         }
 
         AST::Addition { left, right, line: _ } => {
@@ -476,7 +497,7 @@ pub fn eval(expr: AST, context: &mut HashMap<String, AST>) -> Result<AST, String
                 }
 
                 (AST::String(l), AST::String(r)) => {
-                    return Ok(AST::String(format!("{}{}", l, r)));
+                    return Ok(AST::String(format!("{}{}", l, r))); // equivalent to string.concat
                 }
 
                 _ => {

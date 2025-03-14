@@ -1670,12 +1670,13 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
     
                 Ok(Token::String) => {
                     let value = temp_ast.pop().unwrap_or(AST::Null);
+                    let escaped_str = escape_sequence_helper(lexer.slice().to_string());
     
                     match value {
                         AST::Import { file, as_, line } => {
                             if file.is_none() {
                                 temp_ast.push(AST::Import {
-                                    file: Some(lexer.slice().to_string()),
+                                    file: Some(escaped_str),
                                     as_,
                                     line,
                                 });
@@ -1691,7 +1692,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                 AST::Addition { left, right: _, line } => {
                                     args.push(AST::Addition {
                                         left,
-                                        right: Box::new(AST::String(lexer.slice().to_string())),
+                                        right: Box::new(AST::String(escaped_str)),
                                         line,
                                     });
                                 }
@@ -1699,7 +1700,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                 AST::Subtraction { left, right: _, line } => {
                                     args.push(AST::Subtraction {
                                         left,
-                                        right: Box::new(AST::String(lexer.slice().to_string())),
+                                        right: Box::new(AST::String(escaped_str)),
                                         line,
                                     });
                                 }
@@ -1709,14 +1710,14 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                         name: call_name,
                                         args: arg_args,
                                         line,
-                                    }, AST::String(lexer.slice().to_string()))?;
+                                    }, AST::String(escaped_str))?;
 
                                     args.push(new_call);
                                 }
 
                                 AST::PropertyCall { object, property, args: arg_args, line } => {
                                     let mut new_args = arg_args.clone();
-                                    new_args.push(AST::String(lexer.slice().to_string()));
+                                    new_args.push(AST::String(escaped_str));
 
                                     args.push(AST::PropertyCall {
                                         object,
@@ -1727,12 +1728,12 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                 }
 
                                 AST::Null => {
-                                    args.push(AST::String(lexer.slice().to_string()));
+                                    args.push(AST::String(escaped_str));
                                 }
 
                                 _ => {
                                     args.push(arg);
-                                    args.push(AST::String(lexer.slice().to_string()));
+                                    args.push(AST::String(escaped_str));
                                 }
                             }
 
@@ -1744,7 +1745,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                         }
 
                         AST::PropertyCall { object, property, mut args, line } => {
-                            args.push(AST::String(lexer.slice().to_string()));
+                            args.push(AST::String(escaped_str));
 
                             temp_ast.push(AST::PropertyCall {
                                 object,
@@ -1763,7 +1764,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                         name,
                                         value: Box::new(AST::Addition {
                                             left,
-                                            right: Box::new(AST::String(lexer.slice().to_string())),
+                                            right: Box::new(AST::String(escaped_str)),
                                             line,
                                         }),
                                         line,
@@ -1775,7 +1776,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                         name: call_name,
                                         args,
                                         line,
-                                    }, AST::String(lexer.slice().to_string()))?;
+                                    }, AST::String(escaped_str))?;
 
                                     temp_ast.push(AST::LetDeclaration {
                                         name,
@@ -1786,7 +1787,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
 
                                 AST::PropertyCall { object, property, args, line } => {
                                     let mut new_args = args.clone();
-                                    new_args.push(AST::String(lexer.slice().to_string()));
+                                    new_args.push(AST::String(escaped_str));
 
                                     temp_ast.push(AST::LetDeclaration {
                                         name,
@@ -1804,7 +1805,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                 _ => {
                                     temp_ast.push(AST::LetDeclaration {
                                         name,
-                                        value: Box::new(AST::String(lexer.slice().to_string())),
+                                        value: Box::new(AST::String(escaped_str)),
                                         line,
                                     });
                                 }
@@ -1817,7 +1818,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                     temp_ast.push(AST::IfStatement {
                                         condition: Box::new(AST::IsEqual {
                                             left: left.clone(),
-                                            right: Box::new(AST::String(lexer.slice().to_string())),
+                                            right: Box::new(AST::String(escaped_str)),
                                             line: *line,
                                         }),
                                         body,
@@ -1832,7 +1833,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                         temp_ast.push(AST::IfStatement {
                                             condition: Box::new(AST::IsUnequal {
                                                 left: left.clone(),
-                                                right: Box::new(AST::String(lexer.slice().to_string())),
+                                                right: Box::new(AST::String(escaped_str)),
                                                 line: *line,
                                             }),
                                             body,
@@ -1848,7 +1849,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                                         line,
                                     });
         
-                                    temp_ast.push(AST::String(lexer.slice().to_string()));
+                                    temp_ast.push(AST::String(escaped_str));
                                 }
                             }
                         }
@@ -1856,7 +1857,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                         AST::Return { value, line } => {
                             if let AST::Null = *value {
                                 temp_ast.push(AST::Return {
-                                    value: Box::new(AST::String(lexer.slice().to_string())),
+                                    value: Box::new(AST::String(escaped_str)),
                                     line,
                                 });
                             } else {
@@ -2055,7 +2056,7 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
                             return Err((format!("Expected a number, float, string, or let declaration before '+', got {:?}", value), current_line));
                         }
                     }
-                }    
+                }
 
                 Ok(Token::Minus) => {
                     let value = temp_ast.pop().unwrap_or(AST::Null);
@@ -3143,6 +3144,93 @@ pub fn parse(input: &str, context: &mut HashMap<String, AST>) -> Result<(), (Str
     }
 
     Ok(())
+}
+
+pub fn escape_sequence_helper(s: String) -> String {
+    let mut iter = s.chars().peekable();
+    iter.next_if(|ch| *ch == '\'' || *ch == '\"');
+    let tmp = iter.clone().last().unwrap_or('a');
+    if tmp == '\'' || tmp == '\"' {
+        iter.next_back();
+    }
+    let mut s2 = Vec::<char>::new();
+    while let Some(ch) = iter.next() {
+        match ch {
+            '\\' => {
+                let x = iter.next_if_eq(&'x');
+                if let Some(_) = x {
+                    let d1ornone = iter.next_if(|&c| c.is_ascii_hexdigit());
+                    if let Some(d1) = d1ornone {
+                        let d2ornone = iter.next_if(|&c| c.is_ascii_hexdigit());
+                        if let Some(d2) = d2ornone {
+                            let n1 = match d1.to_ascii_lowercase() {
+                                '0' => 0,
+                                '1' => 1,
+                                '2' => 2,
+                                '3' => 3,
+                                '4' => 4,
+                                '5' => 5,
+                                '6' => 6,
+                                '7' => 7,
+                                '8' => 8,
+                                '9' => 9,
+                                'a' => 10,
+                                'b' => 11,
+                                'c' => 12,
+                                'd' => 13,
+                                'e' => 14,
+                                'f' => 15,
+                                _ => 0,
+                            };
+                            let n2 = match d2.to_ascii_lowercase() {
+                                '0' => 0,
+                                '1' => 1,
+                                '2' => 2,
+                                '3' => 3,
+                                '4' => 4,
+                                '5' => 5,
+                                '6' => 6,
+                                '7' => 7,
+                                '8' => 8,
+                                '9' => 9,
+                                'a' => 10,
+                                'b' => 11,
+                                'c' => 12,
+                                'd' => 13,
+                                'e' => 14,
+                                'f' => 15,
+                                _ => 0,
+                            };
+                            s2.push(char::from_u32(((n1 * 16) + n2) as u32).unwrap_or('0'));
+                            continue;
+                        }
+                        s2.push('\\');
+                        s2.push('x');
+                        s2.push(d1);
+                        continue;
+                    }
+                    s2.push('\\');
+                    s2.push('x');
+                    continue;
+                }
+                s2.push('\\');
+            }
+            _ => s2.push(ch),
+        }
+    }
+    let s3 = s2.iter().collect::<String>()
+        .replace("\\0", "\0")
+        .replace("\\\"", "\"")
+        .replace("\\\'", "\'")
+        .replace("\\\\", "\\")
+        .replace("\\a", "\x07")
+        .replace("\\b", "\x08")
+        .replace("\\f", "\x0c")
+        .replace("\\n", "\n")
+        .replace("\\r", "\r")
+        .replace("\\t", "\t")
+        .replace("\\v", "\x0b");
+    s3
 }
 
 fn print_res(res: AST) {
