@@ -7,9 +7,6 @@ const config = {
 		adapter: adapter({
 			fallback: '404.html'
 		}),
-		paths: {
-			base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
-		}
 	}
 };
 
