@@ -12,4 +12,6 @@ With streamlined error messages for easy debugging
 Code examples: https://modu.cyteon.dev/examples \
 Documentation: https://modu.cyteon.dev/docs/quickstart
 
+Official Discord server: https://discord.gg/A5wxr7tXNn
+
 ![image](https://github.com/user-attachments/assets/601b9bcc-1fb7-4eb9-9669-101de6660384)
